@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 CATEGORIES = {'conclusions': '结论', 'structure': '结构', 'tools': '工具'}
 VERSION_FILE = 'kb-version.json'
@@ -72,17 +72,23 @@ def validate_version(data: dict) -> dict:
     return data
 
 
-def validate_url(url: str) -> None:
+def validate_url(url: str, *, allow_query: bool = False) -> None:
     location = urlsplit(url)
-    if location.scheme != 'https' or not location.hostname or location.username or location.password or location.query or location.fragment:
-        raise ValueError('Update URL must be a plain HTTPS URL')
+    if location.scheme != 'https' or not location.hostname or location.username or location.password or (location.query and not allow_query) or location.fragment:
+        raise ValueError('Invalid HTTPS update URL')
+
+
+class HTTPSReleaseRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # GitHub release assets can redirect to signed HTTPS URLs.
+        validate_url(newurl, allow_query=True)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch_version(url: str) -> dict:
     validate_url(url)
     request = Request(url, headers={'Accept': 'application/json', 'User-Agent': 'DarkestDungeonKB/1'})
-    with urlopen(request, timeout=2) as response:
-        validate_url(response.geturl())
+    with build_opener(HTTPSReleaseRedirectHandler()).open(request, timeout=2) as response:
         payload = response.read(MAX_BYTES + 1)
     if len(payload) > MAX_BYTES:
         raise ValueError('Version manifest exceeds maximum size')

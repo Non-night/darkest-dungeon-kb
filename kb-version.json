@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "revision": 4,
+  "revision": 5,
   "hashes": {
-    "conclusions": "cfb666c7a7de7be0c1cc3472f25ba6f8afea61b5a4393fc099dc065981322bb7",
+    "conclusions": "622ef79cfe129e14ef12af32fe4542d05bd213a8e6f26897e03386a36e7a82e3",
     "structure": "c498b4b5a5af651789608b2ec3ef1981846c67d5a0acc2b5aacb94b0e05207da",
-    "tools": "afe52d7ab4612c72ea8888ceb5c4f3f606f2237d12201ca2da0d2e14c49aae25"
+    "tools": "7d3375930c5e1af7079cb585708483db7f573c323dff998e725d79a02301b9ca"
   },
-  "update_url": "https://raw.githubusercontent.com/Non-night/darkest-dungeon-kb/main/kb-version.json"
+  "update_url": "https://github.com/Non-night/darkest-dungeon-kb/releases/latest/download/kb-version.json"
 }

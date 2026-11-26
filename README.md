@@ -6,7 +6,7 @@
 
 直接在 GitHub 上就能看。按专题查时序、概率和副本机制，可以从[机制目录](Mechanics/index.md)开始。已经知道字段名，就查 [Effect](Effect/index.md)、[Buff](Buff/buff_schema.md) 或 [Info / Art / Override](Info/index.md)。要对照原版数据，可以看[原版副本数值表](Reference/vanilla_raid_tables.md)和[特殊配队名称](Reference/vanilla_party_names.md)。仓库也附有 Inui 整理的代码表（`暗黑地牢代码整合版2026.11.11版.xlsx`）。
 
-想跨专题搜索，在仓库首页点 **Code → Download ZIP**，解压整个目录，然后在解压后的仓库根目录打开终端。检索脚本需要 Python 3.10 或更新版本。
+想跨专题搜索，到 [GitHub Releases](https://github.com/Non-night/darkest-dungeon-kb/releases/latest) 下载发布附件中的 `darkest-dungeon-kb-…-test.zip`，解压整个目录，然后在解压后的仓库根目录打开终端。检索脚本需要 Python 3.10 或更新版本。
 
 ```powershell
 python tools/kb_query.py --query "force_resist_type effect_chance"
@@ -36,4 +36,4 @@ python tools/local_mod_syntax_checker/checker.py --root "D:/Mods/MyMod"
 
 ## 更新提示
 
-检索脚本只在运行时顺便检查更新，默认每天最多联网检查一次。发现新版时只提示，保留你的本地文件。想关闭联网检查，在知识库根目录创建 `.kb-local/update-settings.json`，写入 `{"automatic_update_checks": false}`。
+检索脚本只在运行时检查 GitHub 最新 Release 的版本清单，默认每天最多联网检查一次。发现新版时只提示，保留你的本地文件。想关闭联网检查，在知识库根目录创建 `.kb-local/update-settings.json`，写入 `{"automatic_update_checks": false}`。
