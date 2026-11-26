@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "revision": 2,
+  "hashes": {
+    "conclusions": "c123783b4410b725d251363d33e608c42eb7a8be4f60402c28e85b89b92547c4",
+    "structure": "c498b4b5a5af651789608b2ec3ef1981846c67d5a0acc2b5aacb94b0e05207da",
+    "tools": "afe52d7ab4612c72ea8888ceb5c4f3f606f2237d12201ca2da0d2e14c49aae25"
+  },
+  "update_url": "https://raw.githubusercontent.com/Non-night/darkest-dungeon-kb/main/kb-version.json"
+}

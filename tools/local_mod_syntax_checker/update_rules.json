@@ -1,0 +1,59 @@
+{
+  "version": "2026-11-05-build-28385",
+  "source": "Review/2026-11-05-Modding-Update/vs_plugin_update_inventory.json",
+  "info_boolean_fields": {
+    "battle_modifier:": [".ignore_hp_scale"],
+    "combat_skill:": [".ai_valid", ".counts_towards_skill_limit", ".skill_visible", ".force_selection"]
+  },
+  "effect_arguments": {
+    ".gain_loot": "string",
+    ".health_damage_percent": "number",
+    ".dotShuffle": "number",
+    ".cure_burn": "numeric_boolean",
+    ".cure_mortality": "numeric_boolean",
+    ".cure_quirk_tags": "string",
+    ".force_resist_type": "string",
+    ".requires_status": "string",
+    ".requires_bsrc": "string",
+    ".description_tooltip_id": "string",
+    ".suppress_resist_popup": "boolean",
+    ".suppress_zero_heal_popup": "boolean",
+    ".suppress_bark": "boolean",
+    ".set_trigger_limit": "integer",
+    ".trigger_limit_minimum_decrease": "integer",
+    ".trigger_limit_maximum_decrease": "integer"
+  },
+  "effect_targets": [
+    "target_hero_random", "performer_adjacent_random", "performer_adjacents",
+    "performer_adjacent_front", "performer_adjacent_behind", "target_adjacent_random",
+    "target_adjacents", "target_adjacent_front", "target_adjacent_behind", "other_trinket"
+  ],
+  "partial_domains": {
+    "trinkets": "已检查新版 Trigger 数组类型；完整饰品结构、条件和运行时行为不在本项验证范围。",
+    "camping": "已检查新版 effect/sub_type/has_description 基础类型；完整扎营技能语义尚未验证。",
+    "town_events": "已检查 specific_recruit 基础参数；event_cost + embark_party_buff 的组合行为尚未验证。",
+    "quirk": "已检查 evolution_duration_type 值域；完整怪癖结构和演化行为尚未验证。"
+  },
+  "json_fields": {
+    "trinkets": {
+      "move_skill_additional_effects": "string_array",
+      "quest_start_additional_effects": "string_array",
+      "combat_start_additional_effects": "string_array",
+      "turn_start_additional_effects": "string_array"
+    },
+    "camping": {"has_description": "boolean"},
+    "town_events": {},
+    "quirk": {"evolution_duration_type": "evolution_duration_type"}
+  },
+  "json_required_by_type": {
+    "camping": {"effect": {"sub_type": "string"}},
+    "town_events": {"specific_recruit": {"string_data": "string", "number_data": "integer"}}
+  },
+  "json_enums": {"evolution_duration_type": ["combat_end", "quest_end"]},
+  "runtime_only": [
+    "example_id.cove.1.props",
+    "event:/music/mus_battle_<dungeon_id>_hallway",
+    "shared/character/disease_overlay_<quirk_tag_id>.png",
+    "shared/hero/portrait_icon_<quirk_tag_id>.png"
+  ]
+}

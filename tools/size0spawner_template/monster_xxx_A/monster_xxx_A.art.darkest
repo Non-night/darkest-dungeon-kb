@@ -1,0 +1,4 @@
+commonfx: .deathfx death_medium
+display_modifier: .disabled_popup_text_types actor_dot_complete pass hp_heal_dot_onset hp_heal_dot hp_heal_dot_crit miss no_damage crit_damage damage death_avoided deathblow hero_heal hero_heal_crit monster_heal monster_heal_crit 
+display_modifier: .disabled_popup_text_types stress_reduce stress_damage resist move_resist disease_resist buff debuff debuff_resist stun stun_resist stun_clear poison poison_resist bleed bleed_resist cured cure_failed tagged guard guard_failed riposte full heart_attack heal_failed vampire vampire_resist
+display_modifier: .disabled_popup_text_types stress_dot stress_dot_resist shuffle_dot shuffle_dot_resist health_damage_block_onset health_damage_block tag_block damage_reflect control_resist refresh_skills daze daze_resist guard_break
