@@ -21,7 +21,7 @@
 - `.queue false` 是靠前层；省略 `.queue` 时默认值也是 `false`。可近似理解为与技能动画同时发生。
 - `.queue true` 是靠后层；可近似理解为等待技能动画结束后发生。
 
-这是用于理解技能 Effect 的近似模型，不是精确帧级时钟：具体表现时间可能随动画长度变化，底层分界尚未确认。spawn 等其他调用位置的 `.queue` 可能没有独立时序意义。
+这是用于理解技能 Effect 的近似模型，不是精确帧级时钟：具体表现时间可能随动画长度变化，底层分界尚未确认。size-0 的 Spawn 调用时序由召唤实际发生的阶段决定。
 
 ## `queue false` 的跳字合并
 - 同一 `queue false` 层中的减压、加压或真伤跳字，各自会按同类 Effect 的最终数值合并显示。即使连续写入大量同类 Effect，显示的是各段结果的合计，而不是按 Effect 数量分别弹出许多跳字。
@@ -172,7 +172,7 @@ crit: .effects "on_crit_dmg"
 - 上述定身结论同样只适用于 `.pull` / `.push`，不适用于扰乱。
 
 ## 后续机制边界
-- spawn 自身的 queue/AWR 通常没有独立倒流能力，而是继承触发 spawn 的 Effect 时序。
+- size-0 的 `spawn: .effects` 直接引用项在召唤实际发生的时序执行。若 size-0 在 `queue false` 被召出，其 Spawn Effect 就在 `queue false` 执行。被引用 Effect 定义上的 `.queue` 和 `.apply_with_result` 不决定这次 Spawn 调用的时序。召唤后立即执行整段 Spawn 序列，执行完毕才继续父序列中的下一条 Effect，详见 [Spawn 执行链](28-spawn、生命反馈与size0执行链.md)。
 - hp_reaction 不能仅靠自身写 AWR 跑到触发它的伤害或治疗之前。
 - 死亡、ActorDot、动画与战斗胜利仍有各自的延迟点。
 - AWR 与回合外 initiative、spawn 定向或最后一杀组合时风险较高，应按已收录的时序与目标结论逐项检查；仅对未确认组合进行针对性测试或避免使用。

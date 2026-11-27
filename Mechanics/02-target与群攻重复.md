@@ -96,9 +96,9 @@ Effect.apply_once = false
 
 ## `individual_target_actor_rolls`
 - 仅当 Effect 自身的 `.target` 是群体目标时，该字段才有意义。
-- `.individual_target_actor_rolls true`：群体中的每个最终目标、每个 Effect 都重新生成概率骰子。它不只是让不同目标彼此独立；即使多个 Effect 最终指向同一单位、写在同一行，原本应共享的概率也不能再保证共享。
-- `.individual_target_actor_rolls false` 或省略：保留普通群体 Effect 的既有共享结果模型；该结论不外推到未测试的复杂调用方。
-- Effect 自身指向单体目标时，即使调用它的是 AOE 技能，各技能目标原本就分别判断概率，因此本字段没有实际作用。
+- `true` 请求对群 Effect 逐最终目标判定。同一批目标经常一起成功或一起失败，观察结果不足以确认实际骰子独立。多个 Effect 落到同一最终目标时也不能依赖共享。
+- `false` 或省略时，对群 Effect 各目标是否共享骰子尚未确认。
+- AOE 技能对不同技能目标各自独立判定。Effect 自身使用单体目标时，本字段没有实际作用。
 - 单体技能中对 `target` 与 `performer` 的 Effect 仍是同一次目标概率的衍生产物；不能仅因最终 target 字段不同就断言概率独立。
 - 早期测试曾观察到按目标分离且同一目标仍共享的 40% 标记／自疗案例；后续的群体 target + `true` 测试已证明该现象不能泛化为保证。概率边界见 [Effect 概率骰子共享与隔离](51-Effect概率骰子共享与隔离.md)。
 

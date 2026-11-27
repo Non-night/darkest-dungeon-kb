@@ -11,7 +11,7 @@
 字符布尔（合法值：`true`、`false`）
 # 参数约束
 - 参数使用 `true` 或 `false`；省略 `.queue` 时默认为 `false`。
-- 下述前后时序主要描述技能流程；在 spawn 等其他调用位置，`.queue` 可能没有独立时序意义。
+- 下述前后时序主要描述技能流程。size-0 的 `spawn: .effects` 直接调用沿用召唤实际发生的时序，被引用 Effect 自身的 `.queue` 不参与分层。
 # 固定值 / 参数候选
 - `false`
 - `true`

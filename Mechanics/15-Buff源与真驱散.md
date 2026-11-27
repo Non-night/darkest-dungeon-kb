@@ -232,6 +232,61 @@ bsrc_flashback_start
 | `bsrc_last_hero` | None | None | — |
 | `combat_end` | None | It doesnt show how much add/remove from stats in character sheet<br>此源引出的增减益即使对角色面板属性有影响，鼠标移到对应属性也不可见具体修正详情 | 非法（不实际存在）的源类型声明，将一律被纳入该源类型 |
 
+## 扎营有自动清除例外的 Buff 类型
+
+上表 `Camp` 一列是按源类型划分的通常规则。迂回表第 243 条《声明为扎营自动移除的源类型时，存在并不会在扎营时自动移除的特例buff一览表》记录了以 `bsrc_campingskill` 测试时，跨过再次扎营仍保留的 46 个 `stat_type`。条目 154 另记录 `quirk_tag_evolution_duration` 在 `bsrc_crit` 和扎营源上的同类表现。两条均为社区历史测试；第 243 条整份清单的测试源为 `bsrc_campingskill`，其他源和当前版本未逐项复测。
+
+- `ambush_chance`
+- `activity_side_effect_chance`
+- `vampire_evolution_duration`
+- `quirk_evolution_death_immune`
+- `disable_combat_skill_attribute`、`hp_dot_bleed`、`hp_dot_poison`
+- `hp_dot_heal`、`stress_dot`、`shuffle_dot`、`vampire`
+- `torch_increase_percent`、`torch_decrease_percent`
+- `stress_on_miss`
+- `stress_from_idle_in_town`
+- `shard_reward_percent`、`shard_consume_percent`
+- `hp_dot_bleed_duration_received_percent`、`hp_dot_bleed_duration_percent`、`hp_dot_bleed_amount_received_percent`、`hp_dot_bleed_amount_percent`
+- `hp_dot_poison_duration_received_percent`、`hp_dot_poison_duration_percent`、`hp_dot_poison_amount_received_percent`、`hp_dot_poison_amount_percent`
+- `stress_dot_duration_received_percent`、`stress_dot_duration_percent`
+- `stress_dot_amount_received_percent`、`stress_dot_amount_percent`
+- `hp_heal_dot_duration_received_percent`、`hp_heal_dot_duration_percent`、`hp_heal_dot_amount_received_percent`、`hp_heal_dot_amount_percent`
+- `shuffle_dot_duration_received_percent`、`shuffle_dot_duration_percent`
+- `guard_duration_received_percent`、`guard_duration_percent`
+- `cure_bleed_received_chance`、`cure_poison_received_chance`、`cure_bleed_chance`、`cure_poison_chance`
+- `transfer_debuff_from_attacker_chance`、`transfer_buff_from_attacker_chance`
+- `quirk_tag_evolution_duration`
+- `buff_duration_percent`
+- `riposte_duration_percent`
+
+迂回表中 `upgrade_discount` 在使用可由扎营清除的源时正常清除，`quirk_tag_evolution_duration` 则保留。用于自定义描述时，冷却或充能逻辑与其可见描述应分别核对扎营后的状态。`disable_combat_skill_attribute` 也在例外清单中，使用它实现的冷却可能跨过扎营。
+
+后续存档对照还记录了 `hp_dot_burn_amount_percent` 的扎营源实例留存，详见[再次扎营的存档对照](49-扎营技能文件、通用专属分类与图标.md)。
+
+### 存档编号与 DLC 新增类型的待验证关系
+
+知识库编写者推测，随 DLC 新增的 `stat_type` 可能都能跨扎营保留，目前暂未发现已确认首发归属且经直接对照的反例。存档编号只能辅助定位批次。迂回表第 243 条自述覆盖当时的 Buff 类型，正文列出保留项，未附逐项负结果日志。按现有编号表对照，已列出的例外散布在 `4–86`。`1–87` 另有 41 个编号未列为例外，其中 `23`（`upgrade_discount`）有明确的正常清除对照。
+
+| 编号 | 本地游戏定义与扎营证据 |
+|---|---|
+| `31`、`38–39` | `31` 为 `vampire`，`38–39` 为 `quirk_evolution_death_immune`、`vampire_evolution_duration`，后两项可在猩红庭院 `crimson_court.buffs.json` 中核对。三项均列入第 243 条。可将 `31` 视为目前可辨认的血病相关批次线索。 |
+| `41–42`、`44` | `tag_blocked`、`ignore_protection`、`guard_blocked` 均见破盾 DLC 的 `shared/buffs/shieldbreaker.buffs.json`，均未列入保留清单。其首次引入版本与逐项清除结果尚待核对。 |
+| `46–48` | 农庄 DLC 的 `shared/buffs/com.buffs.json` 直接使用 `damage_reflect_percent`（`46`）、`shard_reward_percent`（`47`）和 `shard_consume_percent`（`48`）。`47–48` 有历史保留记录，`46` 未列入清单，首发归属与直接清除结果待核对。 |
+| `88–94` | 当前编号表里的连续燃烧相关区段。`89`（`hp_dot_burn_amount_percent`）已有再次扎营留存实例。`88`、`90–94` 未见同条件测试记录。 |
+
+Fire's Edge Modding Features 新文档中另有七个尚未核定数字 ID 的属性：`crit_dmg_add`、`crit_dmg_multiply`、`disable_combat_skill`、`effect_chance`、`heal_crit_chance_add`、`heal_crit_chance_multiply`、`hp_heal_amount_received`。目前按文档确认其为新记录字段，首发版本、是否属于付费 DLC 与扎营保留行为分别待核对。现有资料可以定位 `88` 为燃烧相关编号区段的起点，DLC 新增类型尚无统一编号分界。
+
+对照依据：[存档 Buff 类型编号表](../Buff/stat_type_amount_classification.md)、迂回表第 243 条、上述本地游戏定义，以及 `Sources/modding_update_20261105_remaining.json`。
+
+## 用 `in_camp` 定向驱散模拟扎营清除
+
+对于扎营时不会自动清除的特殊 Buff，可在同一持有者身上挂一个清理 Buff。清理 Buff 用 `rule_type: in_camp` 和 `remove_if_not_active: false`，以便在非扎营期间留存。它的 `clear_buffs_on_rule_active` 列出目标 Buff 的专用 ID 和清理 Buff 自身的 ID。扎营 Rule 成立时，列表会先处理清除目标，再移除清理 Buff 自身。目标 Buff 应使用有专用 ID 的完整定义，空 ID 会匹配该持有者身上的全部简写 Buff。清理 Buff 的源和持续时间须允许它留到需要清理的扎营节点。见[扎营 Rule](../Buff/rule_type/in_camp.md)和[定向驱散及自清除](25-瞬时效果、正负相抵与二段驱散.md#clear_buffs_on_rule_active-的关键性质)。
+
+- **目标 Buff 在扎营内获得**时，先同步挂一个能在战斗中触发的一次性附魔，可选战斗开始、轮次结束、个人回合开始或个人回合结束。选定节点发生时，附魔给目标 Buff 的持有者施加上述清理 Buff，成功挂上后再定向驱散承载这次附魔的 Buff。如果直接在当前扎营挂清理 Buff，`in_camp` 当时可能已经成立，目标 Buff 会立刻被清掉。如果下次扎营前未经过选定节点，例如连续扎营且中途没有战斗，清理 Buff 尚未挂上，下次扎营就会漏清。
+- **目标 Buff 仅在扎营外获得**时，在每条施加路径上直接给同一持有者挂清理 Buff，例如战斗或奇物施加时一并挂上。只要清理 Buff 成功施加并存续到下次扎营，`in_camp` 成立时就会清除目标和自身。这条路径在下一次扎营前无需经过战斗节点，可覆盖连续扎营的情形。
+
+方案由知识库编写者于 2026-11-27 提出。上述顺序依据已有 Rule 和定向驱散机制推导，整套组合、进入扎营时的实际生效节点，以及夜袭等特殊衔接仍待实机核对。
+
 ## `bsrc_town_event` 的 Buff 描述显示边界
 
 当前用户于 2026-10-12 更正：`bsrc_town_event` 并非不能显示减益描述。实际边界按 Buff 的 `amount` 判断：`amount <= 0` 时该来源的 Buff 无法显示描述；`amount > 0` 时，无论该 Buff 按默认分类属于增益还是减益，都可以显示描述。不要把“无法显示非正 amount 的描述”简化为“无法显示减益”。

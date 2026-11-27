@@ -39,6 +39,23 @@ python tools/local_mod_syntax_checker/test_update_rules.py
 
 Agent 默认调用 `checker.py`，无需 .NET；目录中的 C# 入口仍维护，可用于完整 Buff 专项检查。两入口的新版基础字段共用 `update_rules.json`，并非所有历史检查项完全等价。
 
+## Inui DDModLoader 扩展
+
+加载器的插件功能与版本记录见[独立专题](../../Mechanics/102-Inui-DD-Mod-Loader第三方扩展.md)。本节记录 Python 检查器的适配行为。
+
+Python 入口逐项验证已生效的预制功能。它从本地 Mod 或同 Steam 库创意工坊路径推导游戏目录，也可使用本次 `--reference-root` 指定的 `DarkestDungeon` 目录。确认当前运行的对应 64 位游戏加载了同目录 `dbghelp.dll` 和 `mods/DD Mod Lib` 下的对应 DLL 后，还会核对本次启动生成的该插件日志。JSON 的 `active_inui_features` 列出通过检测的功能。游戏关闭、安装目录不明确、模块无法读取或日志缺少本次成功记录时，沿用原版检查。
+
+| 已验证功能 | 检查器识别的语法 | 启用凭据 |
+|---|---|---|
+| `buff_icon` | Buff 的字符串 `buff_icon` | 日志确认全部 Hook 成功启用 |
+| `custom_type_effects` | Buff 和饰品的 `*_type_additional_effect_ids` / `*_type_additional_effects`，支持字符串与字符串数组，检查 Effect 引用 | 日志确认 CollectEffects detour 已安装 |
+| `dd_immune` | 英雄或怪物 Info 的 `immune:`，Buff 的 `immune_kill`、`immune_control`、`immune_capture` 布尔字段 | 本次日志记录免疫 detour 实际命中 |
+| `hero_level_cap` | 英雄 Info 的 `level_cap:`，支持裸整数、`.max`、`.cap`，插件将结果夹到 1～20 | 日志中四处补丁均报告写回成功 |
+
+插件通过验证后，相应的 Buff 或饰品条目 JSON 可含注释，尾随逗号仍会报错。静态检查未核对 `CustomTypeEffects.cfg` 的运行时屏蔽列表。
+
+依据 InuiDame 项目根目录的 `预制功能说明 Built-in Features.txt` 与 `README.md`。当前适配范围为 Python 静态检查器。C# 入口仍使用其原有规则。属性上限补丁、崩溃修复和 Spine 二进制行为不属于上表的语法规则。
+
 ## Build 28385 新版适配
 
 - 2026-11-08按已采纳的2026-11-05更新清单逐项修复，而非只放行 `.force_selection` / `.ignore_hp_scale`。详见 `UPDATE_COVERAGE.md`。

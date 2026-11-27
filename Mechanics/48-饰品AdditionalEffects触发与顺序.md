@@ -149,6 +149,9 @@ YuriRoseHime于2026-11-17 13:21:52补充：“就连静态buff里的effect_chanc
 官方 Fire's Edge 的 `rw_warm_scarf` 在 `features/runaway/trinkets/runaway.entries.trinkets.json:21-24` 使用 `on_dodge_additional_effects`，引用 `On dodge attacker shuffle single trigger effect`；同一 DLC 的 `effects/runaway.effects.darkest:113` 为该 Effect 写有 `.on_hit false .on_miss true`。这是**佩戴者成功闪避时**的独立触发字段，不必借 `was_hit_additional_effects` 修改 Effect 命中门来模拟。其相对其他 Trigger 的分类顺序不在上表，当前不据此确定。
 
 迂回表第70条 P1249/X1466 以“仅闪避时反击”引出特效，并指出会占用反击机制；保留为原表的历史替代方案，不能再称“仅闪避时触发一般只能借反击”。当前用户补充：这种迂回通常把反击做成**不实际造成伤害、只引出特效的虚假反击**，也可以设计成真正造成伤害的反击；两种设计都占用反击机制。这里不补造虚假反击的具体字段配置。当前用户于2026-11-03确认补入官方闪避 Trigger 实例；该实例证明该 DLC 中存在该写法，尚未逐版实测，不能对其他程序环境作跨版本保证。
+
+受击和闪避 Trigger 已分别限定佩戴者被命中和成功闪避。两者引用的 Effect 通常直接写 `.on_hit true .on_miss true`，让 Trigger 本身决定走哪条分支。Effect 的 `.chance`、抗性等条件仍照常判断。
+
 ## `attack_crit_additional_effects`：攻击暴击 Trigger
 
 ```json

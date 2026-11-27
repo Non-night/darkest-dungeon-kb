@@ -10,6 +10,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable
 
+import inui_extensions
+
 KB = Path(__file__).resolve().parents[2]
 INFO_SCHEMA = KB / "tools" / "info_schema_data.json"
 RAG = KB / "RAG"
@@ -32,6 +34,7 @@ class Checker:
                 if candidate.name.lower()=="darkestdungeon":
                     self.default_game=candidate
                     break
+        self.inui_features = inui_extensions.detect(inui_extensions.game_for_mod(self.root) or self.default_game)
         self.ref_roots=[]
         for candidate in [self.default_game,*self.explicit_ref_roots]:
             if candidate and candidate.is_dir() and candidate != self.root and candidate not in self.ref_roots:
@@ -232,6 +235,17 @@ class Checker:
             elif n=="project.xml": self.project(p)
             if p.suffix.lower() in {".json",".darkest"} and n not in {"project.xml"}: self.encoding_semantics(p)
         return sorted(self.diagnostics,key=lambda x:(x.file,x.line,x.column,x.severity,x.code))
+    def _load_mod_json(self, path, text):
+        name = path.name.lower()
+        comment_features = set()
+        if name.endswith(".buffs.json"):
+            comment_features = {"buff_icon", "custom_type_effects"}
+        elif name.endswith(".entries.trinkets.json"):
+            comment_features = {"custom_type_effects"}
+        if self.inui_features & comment_features:
+            text = inui_extensions.strip_json_comments(text)
+        return json.loads(text)
+
     def index(self):
         for p in self.files+self.ref_files:
             n=p.name.lower()
@@ -254,19 +268,19 @@ class Checker:
                 for m in re.finditer(r'\.id\s+(?:"([^"]+)"|(\S+))',text): self.colour_ids.add(m.group(1) or m.group(2))
             elif n.endswith(".entries.trinkets.json"):
                 try:
-                    d=json.loads(text)
+                    d=self._load_mod_json(p,text)
                     for e in d.get("entries",[]):
                         if isinstance(e,dict) and isinstance(e.get("id"),str): self.trinket_ids.add(e["id"])
                 except Exception: pass
             elif n.endswith(".rarities.trinkets.json"):
                 try:
-                    d=json.loads(text)
+                    d=self._load_mod_json(p,text)
                     for e in d.get("rarities",[]):
                         if isinstance(e,dict) and isinstance(e.get("id"),str): self.rarity_ids.add(e["id"])
                 except Exception: pass
             elif n.endswith(".buffs.json"):
                 try:
-                    d=json.loads(text)
+                    d=self._load_mod_json(p,text)
                     for b in d.get("buffs",[]):
                         if isinstance(b,dict) and isinstance(b.get("id"),str):self.buff_ids.add(b["id"])
                 except Exception: pass
@@ -439,6 +453,15 @@ class Checker:
             h=re.match(r'^\s*([\w]+:)',code)
             if h:
                 current=h.group(1)
+                extension_header = current.lower()
+                is_hero = "heroes" in self._content_parts(self._path_parts(p))
+                plugin = {"immune:": "dd_immune", "level_cap:": "hero_level_cap"}.get(extension_header)
+                if plugin and plugin in self.inui_features and p.name.lower().endswith(".info.darkest") and (is_hero or extension_header == "immune:"):
+                    error = inui_extensions.check_info(extension_header, code[h.end():], is_hero)
+                    if error:
+                        self.add(p,i,1,"error","INUI-INFO-INVALID",error,"DDModLoader Built-in Features")
+                    current = None
+                    continue
                 if current not in self.headers:self.add(p,i,1,"error","VSIX-INFO-UNKNOWN-HEADER",f"未知 Header：{current}","VSIX/Error/InfoBaseErrorTagger.cs");continue
             if not code.strip():continue
             for m in self._keywords(code):
@@ -610,7 +633,7 @@ class Checker:
     def update_json(self,p,domain):
         text=self.read(p,False)
         if text is None:return
-        try:data=json.loads(text)
+        try:data=self._load_mod_json(p,text)
         except json.JSONDecodeError as error:
             self.add(p,error.lineno,error.colno,"error","JSON-INVALID",str(error),"JSON")
             return
@@ -634,18 +657,34 @@ class Checker:
             elif isinstance(node,list):
                 for index,value in enumerate(node):visit(value,f"{path}[{index}]")
         visit(data,"$")
+    def _inui_type_effects(self, p, field, value):
+        source = "DDModLoader Built-in Features"
+        ids = [value] if isinstance(value, str) else value
+        if not isinstance(ids, list) or not all(isinstance(item, str) and item.strip() for item in ids):
+            self.add(p,1,1,"error","INUI-TYPE-EFFECT-INVALID",f"{field} 必须是非空 Effect ID 字符串或此类字符串数组。",source)
+            return
+        for effect_id in dict.fromkeys(ids):
+            if effect_id not in self.effect_ids:
+                self.add(p,1,1,"error","KB-REF-EFFECT-NOT-FOUND",f"{field} 引用的 Effect ID '{effect_id}' 未找到定义。",source)
+
     def trinkets(self,p):
         text=self.read(p)
         if text is None:return
         if p.name.lower().endswith(".entries.trinkets.json"):
             if p.parent.name.lower()!="trinkets":
                 self.add(p,1,1,"warning","KB-TRINKET-WRONG-DIRECTORY","饰品条目文件应位于 Mod 根目录 trinkets/。","Mechanics/47-饰品条目定义与装备Buff.md")
-            try:d=json.loads(text)
+            try:d=self._load_mod_json(p,text)
             except json.JSONDecodeError as e:self.add(p,e.lineno,e.colno,"error","TRINKET-INVALID-JSON",str(e),"Mechanics/47-饰品条目定义与装备Buff.md");return
             entries=d.get("entries") if isinstance(d,dict) else None
             if not isinstance(entries,list):self.add(p,1,1,"error","TRINKET-MISSING-ENTRIES","饰品文件顶层必须包含 entries 数组。","Mechanics/47-饰品条目定义与装备Buff.md");return
             for i,e in enumerate(entries):
                 if not isinstance(e,dict):self.add(p,1,1,"error","TRINKET-ENTRY-NOT-OBJECT",f"entries[{i}] 必须是对象。","Mechanics/47-饰品条目定义与装备Buff.md");continue
+                for field, value in e.items():
+                    if inui_extensions.TYPE_FIELD.fullmatch(field):
+                        if "custom_type_effects" in self.inui_features:
+                            self._inui_type_effects(p, field, value)
+                        else:
+                            self.add(p,1,1,"warning","INUI-FEATURE-NOT-VERIFIED",f"{field} 需要已生效的 custom_type_effects。","DDModLoader Built-in Features")
                 tid=e.get("id")
                 if not isinstance(tid,str) or not tid:self.add(p,1,1,"error","TRINKET-ID-MISSING",f"entries[{i}] 缺少非空 id。","Mechanics/47-饰品条目定义与装备Buff.md")
                 buffs=e.get("buffs",[])
@@ -662,7 +701,7 @@ class Checker:
                 if isinstance(visual,str) and visual and visual not in self.rarity_ids:self.add(p,1,1,"error","KB-REF-VISUAL-RARITY-NOT-FOUND",f"饰品 visual_rarity '{visual}' 未找到稀有度定义。","Mechanics/47-饰品条目定义与装备Buff.md")
         else:
             if p.parent.name.lower()!="trinkets":self.add(p,1,1,"warning","KB-TRINKET-RARITY-WRONG-DIRECTORY","饰品稀有度文件应位于 trinkets/。","Mechanics/47-饰品条目定义与装备Buff.md")
-            try:d=json.loads(text)
+            try:d=self._load_mod_json(p,text)
             except json.JSONDecodeError as e:self.add(p,e.lineno,e.colno,"error","TRINKET-RARITY-INVALID-JSON",str(e),"Mechanics/47-饰品条目定义与装备Buff.md");return
             rs=d.get("rarities") if isinstance(d,dict) else None
             if not isinstance(rs,list):self.add(p,1,1,"error","TRINKET-RARITY-MISSING-ARRAY","稀有度文件顶层必须包含 rarities 数组。","Mechanics/47-饰品条目定义与装备Buff.md");return
@@ -699,7 +738,7 @@ class Checker:
     def buffs(self,p):
         text=self.read(p); 
         if text is None:return
-        try:d=json.loads(text)
+        try:d=self._load_mod_json(p,text)
         except json.JSONDecodeError as e:self.add(p,e.lineno,e.colno,"error","BUFF-INVALID_JSON",str(e),"tools/local_mod_syntax_checker/vendor/BuffGrammarChecker.Core");return
         if not isinstance(d,dict) or not isinstance(d.get("buffs"),list):
             self.add(p,1,1,"error","BUFF-MISSING-BUFFS","根对象必须包含 buffs 数组。","tools/local_mod_syntax_checker/vendor/BuffGrammarChecker.Core")
@@ -718,6 +757,13 @@ class Checker:
                     "StringArray":lambda value:isinstance(value,list) and all(isinstance(item,str) for item in value)}
             for field,value in b.items():
                 expected=self.buff_fields.get(field)
+                if expected is None and field == "buff_icon" and "buff_icon" in self.inui_features:
+                    expected = "String"
+                if expected is None and field in {"immune_kill", "immune_control", "immune_capture"} and "dd_immune" in self.inui_features:
+                    expected = "Boolean"
+                if expected is None and inui_extensions.TYPE_FIELD.fullmatch(field) and "custom_type_effects" in self.inui_features:
+                    self._inui_type_effects(p, field, value)
+                    continue
                 if expected is None:report("BUFF-UNKNOWN_FIELD",f"未知字段 {field}。","warning")
                 elif not checks[expected](value):report("BUFF-INVALID_VALUE_TYPE",f"{field} 必须是 {expected}。")
             rule_data=b.get("rule_data")
@@ -753,7 +799,19 @@ class Checker:
                 for e in lang.iter("entry"):
                     if e.get("id") in base and self.format_sig(base[e.get("id")])!=self.format_sig(e.text or ""):self.add(p,1,1,"warning","LOC-PLACEHOLDER-MISMATCH",f"Entry {e.get('id')} 在 {lid} 中格式参数与 english 不一致。","Mechanics/16-loc与loc2本地化覆盖优先级.md")
     @staticmethod
-    def format_sig(s):return sorted(re.findall(r'%(?:[+\-#0 .0-9]*)([dfuisc])',s.replace('%%','')))
+    def format_sig(s):
+        conversions = []
+        for match in re.finditer(r'%%|%([+\-#0 .0-9]*)([dfuisc])', s):
+            flags, conversion = match.groups()
+            if conversion is None:
+                continue
+            start, end = match.span()
+            # A numeric percent followed by a word, as in "50% chance", is literal text.
+            if (flags and not flags.strip(' ') and start > 0 and '0' <= s[start - 1] <= '9'
+                    and end < len(s) and s[end].isascii() and s[end].isalpha()):
+                continue
+            conversions.append(conversion)
+        return sorted(conversions)
     def project(self,p):
         if "error" in p.parent.name.lower():self.add(p,1,1,"error","KB-MOD-ROOT-ERROR-FRAGMENT","Mod 根目录名称包含 error，可能导致游戏无法识别。","Mechanics/24-Mod识别与职业Mod目录结构.md")
         try:r=ET.parse(p).getroot()
@@ -772,7 +830,7 @@ def main():
         return 2
     # 没有显式 --reference-root 时只使用知识库内置规则和目标 Mod 自身。
     # 游戏本体、DLC 或依赖 Mod 必须由当前调用者在本次运行中显式提供。
-    ds=c.run(); result={"root":str(c.root),"files_scanned":len(c.files),"error_count":sum(x.severity=="error" for x in ds),"warning_count":sum(x.severity=="warning" for x in ds),"info_count":sum(x.severity=="info" for x in ds),"diagnostics":[asdict(x) for x in ds]}
+    ds=c.run(); result={"root":str(c.root),"active_inui_features":sorted(c.inui_features),"files_scanned":len(c.files),"error_count":sum(x.severity=="error" for x in ds),"warning_count":sum(x.severity=="warning" for x in ds),"info_count":sum(x.severity=="info" for x in ds),"diagnostics":[asdict(x) for x in ds]}
     if a.json:print(json.dumps(result,ensure_ascii=False,indent=2))
     else:
         for x in ds:print(f"{x.file}:{x.line}:{x.column}: {x.severity.upper()} {x.code}: {x.message} [{x.source}]")

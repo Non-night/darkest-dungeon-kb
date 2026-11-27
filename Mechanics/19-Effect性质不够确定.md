@@ -228,7 +228,7 @@ Effect 型燃烧的合并与强制 `duration: 10000`、Buff 型燃烧的不合�
 ## 本轮仍未确认的组合边界
 - 攻击暴击时，DOT 除 `.chance +20%` 外的额外变化尚未明确，也不确定该部分是否受 `.crit_doesnt_apply_to_roll` 控制。
 - 友方技能双 false 当前观察为不触发，但该边界仍按避免使用处理。
-- spawn Effect 中的 `.queue`、`.apply_with_result` 等时序字段是否完全无意义尚未确认；不要依赖这些字段改变 spawn 列表顺序。
+- size-0 的 Spawn Effect 调用时序已有确认，见 [Spawn 执行链](28-spawn、生命反馈与size0执行链.md)。该结论限定于时序。
 - `.can_apply_on_death true` 是否能让 `queue true` 真伤造成的击杀延续到尸体尚未确认；当前不要依赖。
 - 真吸血的 AOE 治疗量是否按所有目标最终直伤合并计算尚未确认。
 - 英雄升级文件名前缀是否允许不等于英雄 ID 尚未确认；创作时使用 `<hero_id>.upgrades.json`。

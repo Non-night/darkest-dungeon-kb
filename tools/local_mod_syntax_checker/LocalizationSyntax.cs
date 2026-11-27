@@ -129,6 +129,11 @@ internal static class LocalizationSyntax
         // Knowledge base confirms at least these conversion letters; do not reject unfamiliar compiler extensions.
         const string conversions="dfuisc";
         if(i>=text.Length || !conversions.Contains(text[i])) return false;
+        // A numeric percent followed by a word, as in "50% chance", is literal text.
+        if (start > 0 && char.IsAsciiDigit(text[start - 1]) && i > start + 1 &&
+            i + 1 < text.Length && char.IsAsciiLetter(text[i + 1]) &&
+            text.AsSpan(start + 1, i - start - 1).Trim(' ').IsEmpty)
+            return false;
         type=text[i].ToString(); end=i+1; return true;
     }
     private static int Line(XObject element) => element is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : 1;

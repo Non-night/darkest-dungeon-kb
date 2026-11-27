@@ -39,6 +39,12 @@ enemy_type: .id "bbb"
 - 同一 ID 存在多个单位时，可能全部成为目标；`.apply_once` 不能把它稳定缩减为一个随机目标。
 - `.spawn_target_actor_base_class_id` 必须写在 `.target` 之前。
 
+## 苦修者的同职业组队限制与旧式二段式
+
+在原版与官方 DLC 的正常编队规则下，苦修者（`flagellant`）是唯一不能与同职业英雄同队的原版职业。原版定义给苦修者写了 `tag: .id "flagellant"`，并用 `incompatible_party_member: .id flagellant_limit .hero_tag flagellant` 禁止同标签英雄同队。来源为 `dlc/580100_crimson_court/features/flagellant/heroes/flagellant/flagellant.info.darkest` 第 51、64 行。
+
+知识库编写者于 2026-11-26 确认，按原版编队规则，苦修者可以直接使用依赖职业唯一性的旧式二段式。队伍里有苦修者时，旧式 Spawn 定向用 `.spawn_target_actor_base_class_id flagellant` 配合 `.target target` 就能唯一找到该苦修者。其他原版职业可能有多个同职业队友，因此不能把这种定向当作稳定的单体定位。这条结论的范围是旧式职业定向。修改编队限制或采用新版定向时，按实际规则重新确定目标集合。
+
 ## 定向只在 spawn 调用中生效
 
 知识库编写者确认（2026-09-20）：`.spawn_target_actor_base_class_id` 只在 `spawn: .effects` 调用中改变默认目标。在 `hp_reaction` 等非 spawn 位置引用同一个 Effect 时，该定向字段写与不写的结果相同：字段被忽略，Effect 本身仍按该调用方的默认目标及 `.target` 映射执行，并非整条 Effect 被阻断。

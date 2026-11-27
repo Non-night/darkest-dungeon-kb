@@ -2068,7 +2068,6 @@
 {"from":"mechanic-card:auto:47-饰品条目定义与装备Buff:0e84bf6bf04e","to":"mechanic:47-饰品条目定义与装备Buff","relation":"section_of"}
 {"from":"mechanic-card:auto:47-饰品条目定义与装备Buff:5022403d70cf","to":"mechanic:47-饰品条目定义与装备Buff","relation":"section_of"}
 {"from":"mechanic-card:auto:47-饰品条目定义与装备Buff:46121868284f","to":"mechanic:47-饰品条目定义与装备Buff","relation":"section_of"}
-{"from":"mechanic-card:auto:47-饰品条目定义与装备Buff:d0ad5dd7f666","to":"mechanic:47-饰品条目定义与装备Buff","relation":"section_of"}
 {"from":"mechanic-card:auto:47-饰品条目定义与装备Buff:f3be366ed185","to":"mechanic:47-饰品条目定义与装备Buff","relation":"section_of"}
 {"from":"mechanic-card:48-饰品AdditionalEffects触发与顺序:2:与技能-effect-的关系","to":"mechanic:48-饰品AdditionalEffects触发与顺序","relation":"section_of"}
 {"from":"mechanic-card:48-饰品AdditionalEffects触发与顺序:3:aoe-与重复调用","to":"mechanic:48-饰品AdditionalEffects触发与顺序","relation":"section_of"}
@@ -2427,3 +2426,29 @@
 {"from":"mechanic-card:auto:99-原版随机副本等级分布与刷新:5d3e5fa1dd70","to":"mechanic:99-原版随机副本等级分布与刷新","relation":"section_of"}
 {"from":"mechanic-card:auto:99-原版随机副本等级分布与刷新:b81d693d73bb","to":"mechanic:99-原版随机副本等级分布与刷新","relation":"section_of"}
 {"from":"mechanic-card:auto:99-原版随机副本等级分布与刷新:c92eaeea483c","to":"mechanic:99-原版随机副本等级分布与刷新","relation":"section_of"}
+{"from":"mechanic:04-queue与AWR","to":"mechanic:28-spawn、生命反馈与size0执行链","relation":"see_also","evidence":"explicit_markdown_link"}
+{"from":"mechanic:15-Buff源与真驱散","to":"mechanic:49-扎营技能文件、通用专属分类与图标","relation":"see_also","evidence":"explicit_markdown_link"}
+{"from":"mechanic:19-Effect性质不够确定","to":"mechanic:28-spawn、生命反馈与size0执行链","relation":"see_also","evidence":"explicit_markdown_link"}
+{"from":"anchor:combat-retreat-stress-order","to":"mechanic:92-附魔自附魔时序与 AWR 边界","relation":"source"}
+{"from":"anchor:initiative-save-speed-tie","to":"mechanic:09-initiative行动点","relation":"source"}
+{"from":"anchor:town-stress-facility-buff-stacking","to":"mechanic:101-原版副本探索、扎营夜袭与出本结算","relation":"source"}
+{"from":"anchor:vanilla-abandon-quest-settlement","to":"mechanic:101-原版副本探索、扎营夜袭与出本结算","relation":"source"}
+{"from":"anchor:inui-dd-mod-loader","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"source"}
+{"from":"anchor:mode-start-effect-order-across-heroes","to":"mechanic:92-附魔自附魔时序与 AWR 边界","relation":"source"}
+{"from":"mechanic-card:auto:07-spawn定向:4c5cff0115bf","to":"mechanic:07-spawn定向","relation":"section_of"}
+{"from":"mechanic-card:auto:09-initiative行动点:727960902dd4","to":"mechanic:09-initiative行动点","relation":"section_of"}
+{"from":"mechanic-card:auto:101-原版副本探索、扎营夜袭与出本结算:c530901d5e44","to":"mechanic:101-原版副本探索、扎营夜袭与出本结算","relation":"section_of"}
+{"from":"mechanic-card:auto:101-原版副本探索、扎营夜袭与出本结算:3a5027eecb6f","to":"mechanic:101-原版副本探索、扎营夜袭与出本结算","relation":"section_of"}
+{"from":"mechanic-card:auto:102-Inui-DD-Mod-Loader第三方扩展:2ca89f520f87","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"section_of"}
+{"from":"mechanic-card:auto:102-Inui-DD-Mod-Loader第三方扩展:40f4c98bf362","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"section_of"}
+{"from":"mechanic-card:auto:102-Inui-DD-Mod-Loader第三方扩展:18eb39a3b91f","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"section_of"}
+{"from":"mechanic-card:auto:102-Inui-DD-Mod-Loader第三方扩展:cad7893fef85","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"section_of"}
+{"from":"mechanic-card:auto:102-Inui-DD-Mod-Loader第三方扩展:d4a9ef16f17a","to":"mechanic:102-Inui-DD-Mod-Loader第三方扩展","relation":"section_of"}
+{"from":"mechanic-card:auto:15-Buff源与真驱散:1ba12cb8ce41","to":"mechanic:15-Buff源与真驱散","relation":"section_of"}
+{"from":"mechanic-card:auto:15-Buff源与真驱散:abedc3ecdaa0","to":"mechanic:15-Buff源与真驱散","relation":"section_of"}
+{"from":"mechanic-card:auto:15-Buff源与真驱散:95b57457926a","to":"mechanic:15-Buff源与真驱散","relation":"section_of"}
+{"from":"mechanic-card:auto:17-Buff持续时间类型与实际清除:86d50bca512e","to":"mechanic:17-Buff持续时间类型与实际清除","relation":"section_of"}
+{"from":"mechanic-card:auto:61-官方移动按钮与技能定义组合:c209cd9948a5","to":"mechanic:61-官方移动按钮与技能定义组合","relation":"section_of"}
+{"from":"mechanic-card:auto:92-附魔自附魔时序与 AWR 边界:b51b6f0065ff","to":"mechanic:92-附魔自附魔时序与 AWR 边界","relation":"section_of"}
+{"from":"mechanic-card:auto:92-附魔自附魔时序与 AWR 边界:0235f6e6550e","to":"mechanic:92-附魔自附魔时序与 AWR 边界","relation":"section_of"}
+{"from":"mechanic-card:auto:92-附魔自附魔时序与 AWR 边界:00b9c4524cb1","to":"mechanic:92-附魔自附魔时序与 AWR 边界","relation":"section_of"}

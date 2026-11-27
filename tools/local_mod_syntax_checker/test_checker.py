@@ -12,6 +12,88 @@ from pathlib import Path
 PROJECT = Path(__file__).with_name("checker.py")
 
 
+class InuiExtensionTests(unittest.TestCase):
+    def test_current_session_requires_matching_loaded_modules_and_success(self):
+        from inui_extensions import active_features
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp).resolve()
+            exe = game / "_windows/win64/Darkest.exe"
+            proxy = exe.with_name("dbghelp.dll")
+            plugin = game / "mods/DD Mod Lib/buff_icon.dll"
+            log = game / "DDModLoader/log/buff_icon.log"
+            plugin.parent.mkdir(parents=True)
+            plugin.touch()
+            log.parent.mkdir(parents=True)
+            log.write_text("All hooks installed and enabled successfully.", encoding="utf-8")
+            session = dict(executable=str(exe), started=0, modules=[str(proxy), str(plugin)])
+            self.assertEqual(active_features(game, []), set())
+            self.assertEqual(active_features(game, [dict(session, modules=[str(proxy)])]), set())
+            self.assertEqual(active_features(game, [dict(session, started=9_999_999_999_999)]), set())
+            self.assertEqual(active_features(game, [session, session]), set())
+            self.assertEqual(active_features(game, [session]), {"buff_icon"})
+            with log.open("a", encoding="utf-8") as stream:
+                stream.write("\nIncompatible game version, hooks are not installed\n")
+            self.assertEqual(active_features(game, [session]), set())
+
+    def test_documented_comments_and_level_caps_follow_feature_gates(self):
+        from unittest.mock import patch
+        from checker import Checker
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            hero = root / "heroes/probe"
+            hero.mkdir(parents=True)
+            (hero / "probe.info.darkest").write_text("level_cap: .cap 27\n", encoding="utf-8")
+            buffs = root / "shared/buffs"
+            buffs.mkdir(parents=True)
+            buff_file = buffs / "probe.buffs.json"
+            buff_file.write_text(
+                '{ /* comment */ "buffs": [{"id":"probe//literal", "buff_icon":"test"}] } // end',
+                encoding="utf-8",
+            )
+            with patch("inui_extensions.detect", return_value=set()):
+                codes = {d.code for d in Checker(root, []).run()}
+                self.assertIn("BUFF-INVALID_JSON", codes)
+                self.assertIn("VSIX-INFO-UNKNOWN-HEADER", codes)
+            with patch("inui_extensions.detect", return_value={"buff_icon", "hero_level_cap"}):
+                checker = Checker(root, [])
+                codes = {d.code for d in checker.run()}
+                self.assertNotIn("BUFF-INVALID_JSON", codes)
+                self.assertNotIn("VSIX-INFO-UNKNOWN-HEADER", codes)
+                self.assertIn("probe//literal", checker.buff_ids)
+                buff_file.write_text('{ /* comment */ "buffs": [], }', encoding="utf-8")
+                self.assertIn("BUFF-INVALID_JSON", {d.code for d in Checker(root, []).run()})
+
+    def test_feature_gates_are_independent_and_keep_value_checks(self):
+        from unittest.mock import patch
+        from checker import Checker
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            hero = root / "heroes/probe"
+            hero.mkdir(parents=True)
+            (hero / "probe.info.darkest").write_text(
+                "immune: .kill true\nlevel_cap: .max 7\nunknown: .field 1\n", encoding="utf-8"
+            )
+            buffs = root / "shared/buffs"
+            buffs.mkdir(parents=True)
+            (buffs / "probe.buffs.json").write_text(json.dumps({"buffs": [{
+                "id": "probe", "stat_type": "hp_dot_heal", "stat_sub_type": "", "amount": 1,
+                "rule_type": "always", "is_false_rule": False, "rule_data": {"float": 0},
+                "buff_icon": "my_icon", "immune_kill": "true",
+                "shadow_step_type_additional_effect_ids": ["missing"], "unrelated_typo": 1,
+            }]}), encoding="utf-8")
+            with patch("inui_extensions.detect", return_value={"buff_icon", "dd_immune", "custom_type_effects"}):
+                diagnostics = Checker(root, []).run()
+            self.assertEqual([d.line for d in diagnostics if d.code == "VSIX-INFO-UNKNOWN-HEADER"], [2, 3])
+            self.assertEqual([d.code for d in diagnostics if "immune_kill" in d.message], ["BUFF-INVALID_VALUE_TYPE"])
+            self.assertEqual([d.code for d in diagnostics if "missing'" in d.message], ["KB-REF-EFFECT-NOT-FOUND"])
+            self.assertTrue(any(d.code == "BUFF-UNKNOWN_FIELD" and "unrelated_typo" in d.message for d in diagnostics))
+            self.assertFalse(any("buff_icon" in d.message for d in diagnostics))
+            with patch("inui_extensions.detect", return_value=set()):
+                diagnostics = Checker(root, []).run()
+            self.assertEqual([d.line for d in diagnostics if d.code == "VSIX-INFO-UNKNOWN-HEADER"], [1, 2, 3])
+            self.assertTrue(any(d.code == "BUFF-UNKNOWN_FIELD" and "buff_icon" in d.message for d in diagnostics))
+
+
 class CheckerIntegrationTests(unittest.TestCase):
     def test_project_workshop_id_is_optional_in_every_upload_mode(self) -> None:
         with tempfile.TemporaryDirectory(prefix="dd-project-metadata-") as temp:
@@ -212,6 +294,46 @@ spawn: .effects "{long_id}"
             self.assertIn("KB-ENC-UTF8-BOM", codes)
             # This static boolean field ends with _effects but is not a mode-specific Effect list.
             self.assertFalse(any(item["code"] == "KB-REF-MODE-NOT-FOUND" and "condensed_tooltip" in item["message"] for item in result["diagnostics"]))
+
+    def test_localization_literal_percent_and_format_arguments(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="dd-syntax-percent-") as temp:
+            root = Path(temp)
+            localization = root / "localization"
+            localization.mkdir()
+            (localization / "project_paths.txt").write_text("..", encoding="utf-8")
+            (localization / "percent.string_table.xml").write_text(
+                """<strings>
+  <language id="english">
+    <entry id="buff_tooltip_MGP_Camp_RespText">On attack: 50% chance to gain 50 Charge</entry>
+    <entry id="mixed">50% chance to gain %d%% Charge</entry>
+    <entry id="formatted">{?amount}% 6.2f and %c</entry>
+  </language>
+  <language id="schinese">
+    <entry id="buff_tooltip_MGP_Camp_RespText">攻击命中：阳光+50(50%概率)</entry>
+    <entry id="mixed">50%概率获得%s%%阳光</entry>
+    <entry id="formatted">{?amount}% 6.2f</entry>
+  </language>
+</strings>""",
+                encoding="utf-8",
+            )
+            _, result = self.run_checker(root)
+            warnings = [item["message"] for item in result["diagnostics"]
+                        if item["code"] == "LOC-PLACEHOLDER-MISMATCH"]
+            self.assertEqual(len(warnings), 2, warnings)
+            self.assertTrue(any("mixed" in message for message in warnings))
+            self.assertTrue(any("formatted" in message for message in warnings))
+
+            import shutil
+            runtime = shutil.which("dotnet")
+            assembly = PROJECT.parent / "bin" / "Debug" / "net8.0" / "LocalModSyntaxChecker.dll"
+            if runtime and assembly.is_file():
+                compiled = subprocess.run([runtime, str(assembly), "--root", str(root), "--json"],
+                                          capture_output=True, text=True, encoding="utf-8", check=True)
+                warnings = [item["Message"] for item in json.loads(compiled.stdout)["Diagnostics"]
+                            if item["Code"] == "LOC-PLACEHOLDER-MISMATCH"]
+                self.assertEqual(len(warnings), 2, warnings)
+                self.assertTrue(any("mixed" in message for message in warnings))
+                self.assertTrue(any("formatted" in message for message in warnings))
 
     def test_strict_references_promote_unresolved_ids(self) -> None:
         with tempfile.TemporaryDirectory(prefix="dd-syntax-strict-") as temp:

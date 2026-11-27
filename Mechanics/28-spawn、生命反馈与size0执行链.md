@@ -95,9 +95,9 @@
 同一怪物 Info 中的 `spawn: .effects` 按**从上到下**执行；同一 `.effects` 内存在多个 ID 时按**从左到右**执行。
 
 - 前一个 spawn Effect 结算完成后才进入后一个。
-- spawn Effect 中的 `.queue`、`.apply_with_result` 等技能时序字段疑似没有独立意义；当前不能用它们改变上述列表顺序。
+- size-0 的 `spawn: .effects` 直接引用项在召唤实际发生的时序执行。若 size-0 在 `queue false` 被召出，其 Spawn Effect 就在 `queue false` 执行。被引用 Effect 定义上的 `.queue` 和 `.apply_with_result` 不决定这次 Spawn 调用的时序。 知识库编写者于 2026-11-26 明确了这一规则。推拉的站位更新时点仍按对应位移行为判断。
 - 未发生中途变身时，spawn 或生命反馈带出的 Effect 写在哪个单位的 Info 中，该单位就是施术者。spawn 内 set 的列表来源与当前形态归属须按本页“size-0 的 spawn 内连续 set 变身”区分。
-- spawn Effect 可以插入召唤者技能 Effect 的结算中。
+- 知识库编写者于 2026-11-26 补充：召唤 size-0 可按类函数调用理解。size-0 生成后，整段 `spawn: .effects` 按列表顺序立即插入当前执行序列。Spawn 序列执行完毕后，召唤者才继续执行原序列中的下一条 Effect。例如同一执行序列为「Effect A → 召唤 → Effect B」时，实际顺序为「Effect A → 召唤 → 整段 Spawn → Effect B」。
 
 ## size-0 的 spawn 内连续 set 变身（黑圣物多段式）
 
@@ -200,7 +200,7 @@ effect: .name "SZ0_SWITCH_UNIQUE_MODE" .target target_enemy_group .set_mode sz0_
 这不是按职业或 base class 的 spawn 定向，也不表示 `target_enemy_group` 会读取某个站位。它会把 Effect 的最终范围扩大到对侧全体，因此只有在设计明确允许对侧所有同 ID 模式单位被处理时才适用。模式 ID 若过于简单或常见（例如原版已有的 `beast`，或其他普通单词），其他拥有同名模式定义的单位也可能被一起切换；应改用带 Mod 前缀且唯一的模式 ID，并在风险说明中明确这一碰撞边界。不要因为多数模式名不重复，就把这种写法当成无条件安全的精确筛选。
 
 ## 生命反馈插入
-生命值发生变化时，`hp_reaction` 立即检查并立即执行。它可以插入 spawn 列表中间：
+知识库编写者于 2026-11-26 补充：满足触发条件的 `hp_reaction` 可像函数调用一样理解。反馈所引用的 Effect 精确插入在该次生命值变动之后，执行完后才继续原序列。这个顺序也适用于 Spawn 列表内部。触发仍受生命反馈自身的限制约束，阈值、变化方向和条目选择详见[生命反馈](08-hp_reaction.md)。
 
 ```text
 spawn Effect A
